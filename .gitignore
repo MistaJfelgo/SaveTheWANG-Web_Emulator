@@ -1,0 +1,17 @@
+/tools/emsdk/
+/web/media/
+/web/runtime/
+/mame/build/
+/mame/roms/
+/mame/cfg/
+/mame/nvram/
+/mame/snap/
+/mame/diff/
+/mame/wangweb.js
+/mame/wangweb.wasm
+/mame/wangweb.html
+/mame/wangpc.exe
+*.log
+__pycache__/
+.DS_Store
+Thumbs.db

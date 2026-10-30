@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "stats": {
+    "physicalRecords": 0,
+    "capturedDisks": 0,
+    "availableImages": 0,
+    "mfiImages": 0,
+    "experimentalImages": 0
+  },
+  "disks": []
+}

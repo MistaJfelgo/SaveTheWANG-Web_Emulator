@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Use a Wang — Save The WANG</title>
+<meta name="description" content="Use a preserved Wang Professional Computer in your browser, with your own disks and independent session.">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+</head><body>
+<a class="skip-link" href="#emulator">Skip to the emulator</a>
+<header class="site-header"><div class="wrap"><nav aria-label="Main navigation">
+<a class="wordmark" href="https://savethewang.org/" target="_blank" rel="noopener"><span class="save">Save The</span><span class="wang-box">WANG</span></a>
+<div class="links"><a href="#emulator" class="active" aria-current="page">Use a Wang</a><a href="https://savethewang.org/projects/emulator/" target="_blank" rel="noopener">About this Project</a><a href="https://savethewang.org/software.html" target="_blank" rel="noopener">Software</a><a href="https://savethewang.org/documentation.html" target="_blank" rel="noopener">Documentation</a><a href="https://savethewang.org/recovery.html" target="_blank" rel="noopener">Recovery Logs</a><a href="https://savethewang.org/hardware.html" target="_blank" rel="noopener">Hardware</a><a href="https://savethewang.org/about.html" target="_blank" rel="noopener">About</a></div>
+</nav></div></header>
+<section class="hero"><div class="wrap"><div class="kicker">Wang Professional Computer preservation project</div><h1>Use a Wang <span id="release-version" class="release-version">v2.3.2</span></h1><p class="lede">Experience a preserved Wang Professional Computer. Each session runs in your browser, with your own working copies of the disks.</p></div></section>
+<main id="emulator" class="wrap"><h2 class="section-title">Choose your machine</h2><nav id="machines" aria-label="Choose a machine"></nav>
+<section class="workspace"><div class="screen-panel">
+<div class="screen-title"><strong id="machine-name">PCXC5-3</strong><span id="status" role="status">Ready to start</span></div>
+<div class="keys"><button id="start">Start this Wang</button><button data-key="0,4" disabled>Execute · Insert</button><button data-key="9,8" disabled>Cancel</button><button id="pause" disabled>Pause</button><button id="reset" disabled>Reset</button><button id="fullscreen">Full screen</button><button id="quick-help">Quick Help</button></div>
+<canvas id="canvas" width="800" height="300" tabindex="0" aria-label="Wang computer screen"></canvas>
+<p class="hint">New here? Open <button class="text-button" id="help-link">Quick Help</button> for a friendly first boot and the Wang keys.</p></div>
+<aside aria-label="Disk and session controls"><section class="control-card"><h2>Your disks</h2><p>Each browser session has its own writable copies.</p><button id="browse-library" type="button">Browse disk library</button>
+<div class="floppy-control" data-drive="a"><div class="drive-heading"><strong>Floppy A</strong><div class="format-toggle" role="group" aria-label="Drive A image format"><button id="drive-a-format" type="button" value="mfi" aria-pressed="true" title="Switch to IMG sector images"><strong>MFI</strong> <span aria-hidden="true">⇄</span> IMG</button></div></div><div class="drive-picker"><select id="drive-a" aria-label="Floppy A disk"></select><button id="eject-a" type="button" disabled>Eject</button></div><p id="drive-a-state" class="drive-state">Empty drive</p></div>
+<div id="drive-b-row" class="floppy-control" data-drive="b"><div class="drive-heading"><strong>Floppy B</strong><div class="format-toggle" role="group" aria-label="Drive B image format"><button id="drive-b-format" type="button" value="mfi" aria-pressed="true" title="Switch to IMG sector images"><strong>MFI</strong> <span aria-hidden="true">⇄</span> IMG</button></div></div><div class="drive-picker"><select id="drive-b" aria-label="Floppy B disk"></select><button id="eject-b" type="button" disabled>Eject</button></div><p id="drive-b-state" class="drive-state">Empty drive</p></div>
+<p class="hint">MFI is recommended. Toggle to IMG to compare sector images. Switching formats leaves your inserted disk in place.</p>
+<label><span id="upload-label">Load a local floppy into A</span> <input id="upload" type="file" accept=".mfi,.img,.ima,.imd,.td0,.dsk,.360" disabled></label>
+<p class="hint">SCP captures must be converted to MFI first. Wait for disk activity to finish before swapping.</p>
+</section><section id="winchester-panel" class="control-card"><h2>Winchester C</h2>
+<label id="winchester-choice-row">Starting disk <select id="winchester-image" disabled><option value="ST225-ready.chd">Ready to use — Wang System 2.01</option><option value="ST225-initialized.chd">Initialized — install the OS</option><option value="ST225-uninitialized.chd">Uninitialized — run INITW first</option></select></label>
+<p id="winchester-state" class="hint"></p><p id="winchester-spec" class="hint">ST-225 · 20 MB. Changes to C are included when you save this session’s disks. Choose the starting disk before starting the machine.</p>
+</section><section class="control-card"><h2>Keep your work</h2><button id="save" disabled>Save this session's disks</button>
+<label>Start from saved disks <select id="saved"><option value="">Fresh starting disks</option></select></label>
+<p class="hint">Saves stay in this browser. Restoring creates a separate copy. CPU state is not saved; restored disks boot normally.</p>
+</section><details class="control-card machine-info"><summary>About this machine</summary><p id="details"></p></details></aside></section>
+<details class="emulator-log"><summary>Emulator messages</summary><pre id="log"></pre></details></main>
+<footer class="site-footer"><div class="wrap">Save The Wang — Preserving Wang Professional Computer Software, Documentation, and History<br><span>Browser emulator · PC-S2-2 and PC-S1-2 await original ROM dumps</span></div></footer>
+<dialog id="quick-help-dialog" aria-labelledby="help-title" class="help-dialog">
+<div class="library-heading"><h2 id="help-title">Your first few minutes with a Wang</h2><button id="help-close">Close</button></div>
+<p>Welcome aboard! This Wang has a few keys of its own. Here's the easy route in.</p>
+<ol><li><strong>Leave the defaults and click Start this Wang.</strong> PCXC5-3 starts with System 2.01 already installed on Winchester C. Leave floppy A empty. Every visitor gets private disk copies.</li>
+<li><strong>Give it a moment.</strong> The progress message shows the downloads. The real firmware then runs its startup checks.</li>
+<li><strong>At the date screen:</strong> click the Wang screen, type six digits for the date (MMDDYY), press <strong>Enter</strong> to move to time, and type HHMMSS. An era-appropriate date such as 102986 is fine. Press <strong>Insert</strong> or the page's <strong>Execute</strong> button to continue. (Sorry, WANG didn't exist long enough to be Y2K compliant.)</li>
+<li><strong>At the Wang menu:</strong> press <strong>Space</strong> to move the selection. Press <strong>Insert / Execute</strong> to open it. Choose DOS Command Processor to reach a command prompt.</li>
+<li><strong>Try a disk!</strong> Pick an MFI in the A dropdown or Browse disk library, then insert it in A. In DOS, type <strong>DIR A:</strong> and press Enter to see its files. Try IMG if you want to compare another recovery of the same disk.</li></ol>
+<h3>The keys to remember</h3><dl><dt>Insert = Wang Execute</dt><dd>Opens a menu selection or confirms a Wang screen. The on-page Execute button works too.</dd><dt>Enter = Wang Return</dt><dd>Moves to the next field, or runs a command at the DOS prompt.</dd><dt>Space</dt><dd>Moves the highlighted choice in the main menu.</dd><dt>Cancel button</dt><dd>Sends the Wang Cancel key. Escape is mapped to Wang Help, so it isn't a universal Cancel key.</dd></dl>
+<h3>Disks, resets and goodbyes</h3><p>Wait for disk activity to finish before swapping. <strong>Eject</strong> removes a floppy without losing its working copy. Before Reset, eject an application disk from A or choose a confirmed bootable disk. The menu and DOS may ask you to put the system disk back for COMMAND.COM; that's normal old-school disk juggling.</p>
+<p><strong>Save this session's disks</strong> keeps your changes in this browser. <strong>Turn Off</strong> offers to save first. Later, choose your saved disks before starting. These are disk saves, so the machine boots again rather than resuming the same screen. Clearing this site's browser data removes local saves.</p>
+<p>Want the full installation adventure? Choose an initialized Winchester to install the OS, or an uninitialized one to run INITW from Winchester Utilities first. The ready-to-use default is the easiest starting point.</p>
+<p class="hint">Keyboard input on phones is still limited: a canvas doesn't automatically open the phone's keyboard. A desktop or an external keyboard is the best option for now.</p>
+</dialog>
+<dialog id="power-dialog" aria-labelledby="power-title" class="help-dialog"><h2 id="power-title">Turn off this Wang?</h2><p>Save your disks to keep your changes in this browser. Turning off stops this session and returns to the start screen.</p><div class="dialog-actions"><button id="power-save">Save &amp; turn off</button><button id="power-discard">Turn off without saving</button><button id="power-cancel">Keep running</button></div></dialog>
+<dialog id="disk-library" aria-labelledby="library-title">
+<div class="library-heading"><h2 id="library-title">Disk library</h2><button id="library-close" aria-label="Close disk library">Close</button></div>
+<p id="library-summary"></p><p class="hint">Original captures stay in the preservation archive. MFI flux conversions are preferred; IMG derivatives remain available for comparison and community testing; some may fail to load or contain damaged sectors. Before startup, only confirmed bootable floppies can be selected. After boot, insert any available image. Please report the disk ID, filename and result through the project contact page.</p>
+<div class="library-filters"><label>Search disks <input id="library-search" type="search" placeholder="ID, title, or notes"></label><div class="format-toggle library-format-toggle"><span>Image format</span><button id="library-format" type="button" value="mfi" aria-label="Library format: MFI. Switch to IMG" aria-pressed="true"><strong>MFI</strong> <span aria-hidden="true">⇄</span> IMG</button></div><label>Show <select id="library-filter"><option value="ready">Available images</option><option value="validated">Validated / emulator native</option><option value="bootable">Confirmed bootable</option><option value="captured">Captured disks</option><option value="all">All catalog records</option></select></label></div>
+<p id="library-count" role="status"></p><div class="library-table"><table><thead><tr><th>ID</th><th>Disk label</th><th>Availability</th><th>Boot floppy</th><th>Use / details</th></tr></thead><tbody id="library-results"></tbody></table></div>
+</dialog>
+<script src="app.js"></script></body></html>
+

@@ -1,0 +1,723 @@
+diff --git a/scripts/genie.lua b/scripts/genie.lua
+index 86844d7f..0b2f46c0 100644
+--- a/scripts/genie.lua
++++ b/scripts/genie.lua
+@@ -1131,7 +1131,8 @@ configuration { "asmjs" }
+ 		"-s USE_SDL_TTF=3",
+ 		"-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=\"['\\$$ERRNO_CODES']\"",
+ 		"-s EXPORTED_FUNCTIONS=\"['_main', '_malloc', '__ZN15running_machine30emscripten_get_running_machineEv', '__ZN15running_machine17emscripten_get_uiEv', '__ZN15running_machine20emscripten_get_soundEv', '__ZN15mame_ui_manager12set_show_fpsEb', '__ZNK15mame_ui_manager8show_fpsEv', '__ZN13sound_manager4muteEbh', '__ZN15running_machine15emscripten_saveEPKc', '__ZN15running_machine15emscripten_loadEPKc', '__ZN15running_machine21emscripten_hard_resetEv', '__ZN15running_machine21emscripten_soft_resetEv', '__ZN15running_machine15emscripten_exitEv']\"",
+-		"-s EXPORTED_RUNTIME_METHODS=\"['cwrap']\"",
++		"-s EXPORTED_RUNTIME_METHODS=\"['cwrap','FS']\"",
++		"-s GROWABLE_ARRAYBUFFERS=0",
+ 		"-s ERROR_ON_UNDEFINED_SYMBOLS=0",
+ 		"-s STACK_SIZE=5MB",
+ 		"-s MAX_WEBGL_VERSION=2",
+diff --git a/scripts/src/3rdparty.lua b/scripts/src/3rdparty.lua
+index d95b0c41..3cc8fe12 100644
+--- a/scripts/src/3rdparty.lua
++++ b/scripts/src/3rdparty.lua
+@@ -1921,7 +1921,7 @@ project "residfp"
+ 		MAME_DIR .. "3rdparty/residfp",
+ 	}
+ 
+-	if _OPTIONS["gcc"]~=nil and string.find(_OPTIONS["gcc"], "clang") then
++	if _OPTIONS["gcc"]~=nil and (string.find(_OPTIONS["gcc"], "clang") or _OPTIONS["gcc"]=="asmjs") then
+ 		configuration { "gmake or ninja or jcdb" }
+ 			buildoptions_cpp {
+ 				"-Wno-mismatched-tags",
+diff --git a/scripts/src/devices.lua b/scripts/src/devices.lua
+index 57b8ce2a..cdf15362 100644
+--- a/scripts/src/devices.lua
++++ b/scripts/src/devices.lua
+@@ -20,7 +20,7 @@ function devicesProject(_target, _subtarget)
+ 	kind (LIBTYPE)
+ 	targetsubdir(_target .."_" .. _subtarget)
+ 
+-	if (_OPTIONS["targetos"] ~= "asmjs") then
++	if (_OPTIONS["targetos"] ~= "asmjs" or _OPTIONS["subtarget"] == "wangweb") then
+ 		options {
+ 			"ArchiveSplit",
+ 		}
+diff --git a/scripts/src/mame/frontend.lua b/scripts/src/mame/frontend.lua
+index d98b0706..17cf4ea8 100644
+--- a/scripts/src/mame/frontend.lua
++++ b/scripts/src/mame/frontend.lua
+@@ -16,7 +16,7 @@ kind (LIBTYPE)
+ addprojectflags()
+ precompiledheaders()
+ 
+-if (_OPTIONS["targetos"] ~= "asmjs") then
++if (_OPTIONS["targetos"] ~= "asmjs" or _OPTIONS["subtarget"] == "wangweb") then
+ 	options {
+ 		"ArchiveSplit",
+ 	}
+diff --git a/scripts/src/osd/modules.lua b/scripts/src/osd/modules.lua
+index 3b6cede8..497b06b4 100644
+--- a/scripts/src/osd/modules.lua
++++ b/scripts/src/osd/modules.lua
+@@ -522,7 +522,7 @@ function osdmodulestargetconf()
+ 				links {
+ 					"opengl32",
+ 				}
+-			else
++			elseif _OPTIONS["targetos"]~="asmjs" then
+ 				links {
+ 					"GL",
+ 				}
+diff --git a/src/devices/bus/wangpc/emb.cpp b/src/devices/bus/wangpc/emb.cpp
+index 0114f254..ec0d410c 100644
+--- a/src/devices/bus/wangpc/emb.cpp
++++ b/src/devices/bus/wangpc/emb.cpp
+@@ -86,7 +86,7 @@ uint16_t wangpc_emb_device::wangpcbus_mrdc_r(offs_t offset, uint16_t mem_mask)
+ {
+ 	uint16_t data = 0xffff;
+ 
+-	for (int bank = 0; bank < 4; bank++)
++	for (unsigned bank = 0; bank < m_ram_banks; bank++)
+ 	{
+ 		if (ENABLE(bank) && (A19_A18_A17 == BASE(bank)))
+ 		{
+@@ -104,7 +104,7 @@ uint16_t wangpc_emb_device::wangpcbus_mrdc_r(offs_t offset, uint16_t mem_mask)
+ 
+ void wangpc_emb_device::wangpcbus_amwc_w(offs_t offset, uint16_t mem_mask, uint16_t data)
+ {
+-	for (int bank = 0; bank < 4; bank++)
++	for (unsigned bank = 0; bank < m_ram_banks; bank++)
+ 	{
+ 		if (ENABLE(bank) && (A19_A18_A17 == BASE(bank)))
+ 		{
+diff --git a/src/devices/bus/wangpc/emb.h b/src/devices/bus/wangpc/emb.h
+index de137305..5a055e97 100644
+--- a/src/devices/bus/wangpc/emb.h
++++ b/src/devices/bus/wangpc/emb.h
+@@ -28,6 +28,9 @@ public:
+ 	// construction/destruction
+ 	wangpc_emb_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+ 
++	// A partially populated board exposes only its installed 128 KiB banks.
++	void set_ram_banks(unsigned banks) { m_ram_banks = banks; }
++
+ protected:
+ 	// device-level overrides
+ 	virtual void device_start() override ATTR_COLD;
+@@ -41,6 +44,7 @@ protected:
+ 
+ private:
+ 	memory_share_creator<uint16_t> m_ram;
++	unsigned m_ram_banks = 4;
+ 	uint16_t m_option;
+ 	int m_parity_error;
+ 	int m_parity_odd;
+diff --git a/src/devices/bus/wangpc/wangpc.cpp b/src/devices/bus/wangpc/wangpc.cpp
+index 2d9d4adf..9d569fde 100644
+--- a/src/devices/bus/wangpc/wangpc.cpp
++++ b/src/devices/bus/wangpc/wangpc.cpp
+@@ -233,6 +233,9 @@ void device_wangpcbus_card_interface::interface_pre_start()
+ void wangpc_cards(device_slot_interface &device)
+ {
+ 	device.option_add("emb", WANGPC_EMB); // extended memory board
++	device.option_add("emb128", WANGPC_EMB).machine_config([](device_t *device) {
++		downcast<wangpc_emb_device &>(*device).set_ram_banks(1);
++	});
+ 	device.option_add("lic", WANGPC_LIC); // local interconnect option card
+ 	device.option_add("lvc", WANGPC_LVC); // low-resolution video controller
+ 	device.option_add("mcc", WANGPC_MCC); // multiport communications controller
+diff --git a/src/devices/bus/wangpc/wdc.cpp b/src/devices/bus/wangpc/wdc.cpp
+index 0feafb24..6954019f 100644
+--- a/src/devices/bus/wangpc/wdc.cpp
++++ b/src/devices/bus/wangpc/wdc.cpp
+@@ -113,7 +113,11 @@ DEFINE_DEVICE_TYPE(WANGPC_WDC, wangpc_wdc_device, "wangpc_wdc", "Wang PC-PM001 W
+ 
+ ROM_START( wangpc_wdc )
+ 	ROM_REGION( 0x1000, Z80_TAG, 0 )
+-	ROM_LOAD( "378-9040 r9.l19", 0x0000, 0x1000, CRC(282770d2) SHA1(a0e3bad5041e0dfd6087907015b07a093b576bc0) )
++	ROM_DEFAULT_BIOS( "r9" )
++	ROM_SYSTEM_BIOS( 0, "r9", "R9" )
++	ROMX_LOAD( "378-9040 r9.l19", 0x0000, 0x1000, CRC(282770d2) SHA1(a0e3bad5041e0dfd6087907015b07a093b576bc0), ROM_BIOS(0) )
++	ROM_SYSTEM_BIOS( 1, "r12", "R12 (PM029)" )
++	ROMX_LOAD( "378-9040 r12.l19", 0x0000, 0x1000, CRC(e4a18e6c) SHA1(a0b411013372b34c379cca2eb2e2f87dd907f56a), ROM_BIOS(1) )
+ 
+ 	ROM_REGION( 0x1000, "address", 0 )
+ 	ROM_LOAD( "378-9041.l54", 0x0000, 0x1000, CRC(94e9a17d) SHA1(060c576d70069ece2d0dbce86ffc448df2b169e7) )
+@@ -755,7 +759,15 @@ uint8_t wangpc_wdc_device::drive_r()
+ 
+ 	// bit 1 must read 1 or the seek routine bails out at 0x0A5C
+ 	// before ever opening the read gate (error path 0x0A87)
+-	uint8_t data = DRIVE_ID | 0x10 | 0x02;
++	u8 drive_id = DRIVE_ID;
++	if (m_harddisk->exists())
++	{
++		auto const &info = m_harddisk->get_info();
++		// R12's 20 MB table entry (ID 0x20) addresses 612 of the ST-225's 615 cylinders.
++		if (info.cylinders == 615 && info.heads == 4 && info.sectors == 32 && info.sectorbytes == 256)
++			drive_id = 0x20;
++	}
++	uint8_t data = drive_id | 0x10 | 0x02;
+ 
+ 	LOG("%s WDC drive_r %02x\n", machine().describe_context(), data);
+ 
+diff --git a/src/devices/imagedev/floppy.cpp b/src/devices/imagedev/floppy.cpp
+index 845fb0af..22c0f4f1 100644
+--- a/src/devices/imagedev/floppy.cpp
++++ b/src/devices/imagedev/floppy.cpp
+@@ -747,6 +747,7 @@ std::pair<std::error_condition, std::string> floppy_image_device::call_load()
+ 	if (protect)
+ 		make_readonly();
+ 
++	m_input_format = best_format;
+ 	m_output_format = is_readonly() ? nullptr : best_format;
+ 
+ 	m_image_dirty = false;
+diff --git a/src/emu/machine.cpp b/src/emu/machine.cpp
+index bf451940..960b2835 100644
+--- a/src/emu/machine.cpp
++++ b/src/emu/machine.cpp
+@@ -1402,6 +1402,13 @@ void running_machine::emscripten_main_loop()
+ {
+ 	running_machine *machine = emscripten_running_machine;
+ 
++	// Animation callbacks follow the browser/display cadence, not necessarily 60 Hz.
++	// Discard long background gaps rather than trying to replay them on return.
++	static double previous_time = emscripten_get_now();
++	const double now = emscripten_get_now();
++	const double elapsed = std::clamp((now - previous_time) / 1000.0, 0.0, 0.1);
++	previous_time = now;
++
+ 	auto profile = g_profiler.start(PROFILER_EXTRA);
+ 
+ 	// execute CPUs if not paused
+@@ -1410,9 +1417,8 @@ void running_machine::emscripten_main_loop()
+ 		device_scheduler * scheduler;
+ 		scheduler = &(machine->scheduler());
+ 
+-		// Emscripten will call this function at 60Hz, so step the simulation
+-		// forward for the amount of time that has passed since the last frame
+-		const attotime frametime(0,HZ_TO_ATTOSECONDS(60));
++		// Keep guest time independent of animation callback frequency.
++		const attotime frametime = attotime::from_double(elapsed);
+ 		const attotime stoptime(scheduler->time() + frametime);
+ 
+ 		while (!machine->m_paused && !machine->scheduled_event_pending() && scheduler->time() < stoptime)
+diff --git a/src/lib/formats/mfi_dsk.cpp b/src/lib/formats/mfi_dsk.cpp
+index ca622bc5..f6bf261f 100644
+--- a/src/lib/formats/mfi_dsk.cpp
++++ b/src/lib/formats/mfi_dsk.cpp
+@@ -134,6 +134,11 @@ bool mfi_format::load(util::random_read &io, uint32_t form_factor, const std::ve
+ 	int const resolution = h.cyl_count >> RESOLUTION_SHIFT;
+ 	h.cyl_count &= CYLINDER_MASK;
+ 
++	int max_tracks, max_heads;
++	image.get_maximal_geometry(max_tracks, max_heads);
++	if (resolution > 2 || h.cyl_count > max_tracks || !h.head_count || h.head_count > max_heads)
++		return false;
++
+ 	image.set_form_variant(h.form_factor, h.variant);
+ 
+ 	if(!h.cyl_count)
+diff --git a/src/mame/mame.lst b/src/mame/mame.lst
+index 7c8dc19a..89eb3e6c 100644
+--- a/src/mame/mame.lst
++++ b/src/mame/mame.lst
+@@ -49556,6 +49556,8 @@ innotab2
+ 
+ @source:wang/wangpc.cpp
+ wangpc
++wangpcdiag
++wangpchle
+ 
+ @source:wavemate/bullet.cpp
+ wmbullet
+diff --git a/src/mame/wang/wangpc.cpp b/src/mame/wang/wangpc.cpp
+index 004046b0..53382559 100644
+--- a/src/mame/wang/wangpc.cpp
++++ b/src/mame/wang/wangpc.cpp
+@@ -88,6 +88,8 @@ public:
+ 	}
+ 
+ 	void wangpc(machine_config &config);
++	void wangpc_diag(machine_config &config);
++	void wangpc_hle(machine_config &config);
+ 
+ private:
+ 	required_device<cpu_device> m_maincpu;
+@@ -99,7 +101,7 @@ private:
+ 	required_device<scn_pci_device> m_epci;
+ 	required_device<upd765a_device> m_fdc;
+ 	required_device<ram_device> m_ram;
+-	required_device_array<floppy_image_device, 2> m_floppy;
++	optional_device_array<floppy_image_device, 2> m_floppy;
+ 	required_device<centronics_device> m_centronics;
+ 	required_device<input_buffer_device> m_cent_data_in;
+ 	required_device<output_latch_device> m_cent_data_out;
+@@ -253,6 +255,7 @@ void wangpc_state::fdc_ctrl_w(uint8_t data)
+ 
+ 	if (BIT(data, 2)) m_fdc_dd0 = 0;
+ 	if (BIT(data, 3)) m_fdc_dd1 = 0;
++	check_level2_interrupts();
+ 
+ 	LOG("%s: Enable /EOP %u\n", machine().describe_context(), m_enable_eop);
+ 	LOG("%s: Disable /DREQ2 %u\n", machine().describe_context(), m_disable_dreq2);
+@@ -330,7 +333,7 @@ void wangpc_state::motor1_on_w(offs_t offset, uint8_t data)
+ {
+ 	LOG("%s: Drive 1 motor %s\n", machine().describe_context(), offset ? "ON" : "OFF");
+ 
+-	m_floppy[0]->mon_w(!offset);
++	if (m_floppy[0]) m_floppy[0]->mon_w(!offset);
+ }
+ 
+ uint8_t wangpc_state::motor2_on_r(offs_t offset)
+@@ -345,7 +348,7 @@ void wangpc_state::motor2_on_w(offs_t offset, uint8_t data)
+ {
+ 	LOG("%s: Drive 2 motor %s\n", machine().describe_context(), offset ? "ON" : "OFF");
+ 
+-	m_floppy[1]->mon_w(!offset);
++	if (m_floppy[1]) m_floppy[1]->mon_w(!offset);
+ }
+ 
+ uint8_t wangpc_state::fdc_reset_r()
+@@ -419,8 +422,10 @@ uint8_t wangpc_state::status_r()
+ 	data |= m_fdc->get_irq() << 3;
+ 	data |= m_fdc_dd0 << 4;
+ 	data |= m_fdc_dd1 << 5;
+-	data |= m_floppy[0]->exists() ? 0 : 0x40;
+-	data |= m_floppy[1]->exists() ? 0 : 0x80;
++	// An absent drive has no open-door switch.  R3 uses these bits to
++	// distinguish an uninstalled drive from a failed installed drive.
++	data |= (m_floppy[0] && !m_floppy[0]->exists()) ? 0x40 : 0;
++	data |= (m_floppy[1] && !m_floppy[1]->exists()) ? 0x80 : 0;
+ 
+ 	return data;
+ }
+@@ -972,8 +977,8 @@ uint8_t wangpc_state::ppi_pb_r()
+ 	data |= m_uart_tbre << 4;
+ 	data |= m_uart_dr << 5;
+ 
+-	// FDC interrupt
+-	data |= m_fdc->get_irq() << 6;
++	// The floppy interrupt includes both door-change latches and the FDC IRQ.
++	data |= (m_fdc_dd0 || m_fdc_dd1 || m_fdc->get_irq()) << 6;
+ 
+ 	// 8087 interrupt
+ 	data |= m_fpu_irq << 7;
+@@ -1166,10 +1171,16 @@ void wangpc_state::bus_irq2_w(int state)
+ void wangpc_state::machine_start()
+ {
+ 	// connect floppy callbacks
+-	m_floppy[0]->setup_load_cb(floppy_image_device::load_cb(&wangpc_state::on_disk0_load, this));
+-	m_floppy[0]->setup_unload_cb(floppy_image_device::unload_cb(&wangpc_state::on_disk0_unload, this));
+-	m_floppy[1]->setup_load_cb(floppy_image_device::load_cb(&wangpc_state::on_disk1_load, this));
+-	m_floppy[1]->setup_unload_cb(floppy_image_device::unload_cb(&wangpc_state::on_disk1_unload, this));
++	if (m_floppy[0])
++	{
++		m_floppy[0]->setup_load_cb(floppy_image_device::load_cb(&wangpc_state::on_disk0_load, this));
++		m_floppy[0]->setup_unload_cb(floppy_image_device::unload_cb(&wangpc_state::on_disk0_unload, this));
++	}
++	if (m_floppy[1])
++	{
++		m_floppy[1]->setup_load_cb(floppy_image_device::load_cb(&wangpc_state::on_disk1_load, this));
++		m_floppy[1]->setup_unload_cb(floppy_image_device::unload_cb(&wangpc_state::on_disk1_unload, this));
++	}
+ 
+ 	// state saving
+ 	save_item(NAME(m_dma_page));
+@@ -1357,6 +1368,23 @@ void wangpc_state::wangpc(machine_config &config)
+ 
+ 
+ 
++// Local diagnostic configuration: keyboard physically disconnected, no substitute ROM.
++void wangpc_state::wangpc_diag(machine_config &config)
++{
++	wangpc(config);
++	m_uart->tro_callback().set_nop();
++	config.device_remove("wangpckb");
++}
++
++
++void wangpc_state::wangpc_hle(machine_config &config)
++{
++	wangpc_diag(config);
++	WANGPC_HLE_KEYBOARD(config, "wangpckb").txd_handler().set(m_uart, FUNC(im6402_device::rri_w));
++	m_uart->tro_callback().set("wangpckb", FUNC(wangpc_hle_keyboard_device::write_rxd));
++}
++
++
+ //**************************************************************************
+ //  ROM DEFINITIONS
+ //**************************************************************************
+@@ -1367,10 +1395,18 @@ void wangpc_state::wangpc(machine_config &config)
+ 
+ ROM_START( wangpc )
+ 	ROM_REGION16_LE( 0x4000, I8086_TAG, 0)
+-	ROM_LOAD16_BYTE( "0001 r2.l94", 0x0001, 0x2000, CRC(f9f41304) SHA1(1815295809ef11573d724ede47446f9ac7aee713) )
+-	ROM_LOAD16_BYTE( "379-0000 r2.l115", 0x0000, 0x2000, CRC(67b37684) SHA1(70d9f68eb88cc2bc9f53f949cc77411c09a4266e) )
++	ROM_DEFAULT_BIOS( "r2" )
++	ROM_SYSTEM_BIOS( 0, "r2", "R2" )
++	ROMX_LOAD( "0001 r2.l94", 0x0001, 0x2000, CRC(f9f41304) SHA1(1815295809ef11573d724ede47446f9ac7aee713), ROM_SKIP(1) | ROM_BIOS(0) )
++	ROMX_LOAD( "379-0000 r2.l115", 0x0000, 0x2000, CRC(67b37684) SHA1(70d9f68eb88cc2bc9f53f949cc77411c09a4266e), ROM_SKIP(1) | ROM_BIOS(0) )
++	ROM_SYSTEM_BIOS( 1, "r3", "R3 (9521-R3)" )
++	ROMX_LOAD( "0000 r3.l115", 0x0000, 0x2000, CRC(11b245b5) SHA1(3d618b03e241f6c661b9b38f9e7d7d8364ecee85), ROM_SKIP(1) | ROM_BIOS(1) )
++	ROMX_LOAD( "0001 r3.l94", 0x0001, 0x2000, CRC(f512e6bf) SHA1(ef8b05c195aff94c19ec04b39a9042f684623f8d), ROM_SKIP(1) | ROM_BIOS(1) )
+ ROM_END
+ 
++#define rom_wangpcdiag rom_wangpc
++#define rom_wangpchle rom_wangpc
++
+ } // anonymous namespace
+ 
+ 
+@@ -1379,3 +1415,108 @@ ROM_END
+ //**************************************************************************
+ 
+ COMP( 1985, wangpc, 0, 0, wangpc, wangpc, wangpc_state, empty_init, "Wang Laboratories", "Wang Professional Computer", MACHINE_SUPPORTS_SAVE )
++
++COMP( 1985, wangpcdiag, wangpc, 0, wangpc_diag, wangpc, wangpc_state, empty_init, "Wang Laboratories", "Wang Professional Computer (keyboard disconnected, diagnostic)", MACHINE_NOT_WORKING | MACHINE_SUPPORTS_SAVE )
++
++COMP( 1985, wangpchle, wangpc, 0, wangpc_hle, wangpc, wangpc_state, empty_init, "Wang Laboratories", "Wang Professional Computer (high-level keyboard)", MACHINE_SUPPORTS_SAVE )
++#ifdef __EMSCRIPTEN__
++#include <emscripten.h>
++#include "formats/flopimg.h"
++#include <cstdio>
++
++namespace {
++std::string wang_web_error;
++}
++
++extern "C" {
++EMSCRIPTEN_KEEPALIVE int wang_ready()
++{
++    return running_machine::emscripten_get_running_machine() != nullptr;
++}
++
++EMSCRIPTEN_KEEPALIVE double wang_time()
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    return machine ? machine->time().as_double() : 0.0;
++}
++
++EMSCRIPTEN_KEEPALIVE const char *wang_text()
++{
++    static std::string text;
++    text.clear();
++    auto *machine = running_machine::emscripten_get_running_machine();
++    auto *share = machine ? machine->root_device().memshare(":slot2:mvc:video_ram") : nullptr;
++    if (!share) return text.c_str();
++    const auto *words = reinterpret_cast<const uint16_t *>(share->ptr());
++    for (int i = 0; i < 2048; ++i) {
++        const unsigned ch = words[i] >> 8;
++        text += ch >= 32 && ch < 127 ? char(ch) : ' ';
++        if (i % 80 == 79) text += '\n';
++    }
++    return text.c_str();
++}
++
++EMSCRIPTEN_KEEPALIVE const char *wang_last_error()
++{
++    return wang_web_error.c_str();
++}
++
++EMSCRIPTEN_KEEPALIVE int wang_key(int row, int mask, int down)
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    if (!machine || row < 0 || row > 15) return 0;
++    auto *port = machine->root_device().ioport(util::string_format(":wangpckb:Y%d", row).c_str());
++    auto *field = port ? port->field(mask) : nullptr;
++    if (!field) return 0;
++    field->set_value(down ? 1 : 0);
++    return 1;
++}
++
++EMSCRIPTEN_KEEPALIVE int wang_floppy(int drive, const char *path)
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    if (!machine || drive < 0 || drive > 1) return 0;
++    auto *image = machine->root_device().subdevice<floppy_image_device>(
++        drive ? "upd765:1:525dd" : "upd765:0:525dd");
++    if (!image) return 0;
++    wang_web_error.clear();
++    if (!path || !*path) {
++        image->unload();
++        return 1;
++    }
++    auto [error, message] = image->load(path);
++    if (error) {
++        wang_web_error = message.empty() ? error.message() : message;
++        return 0;
++    }
++    return 1;
++}
++
++EMSCRIPTEN_KEEPALIVE void wang_pause(int paused)
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    if (!machine) return;
++    if (paused) machine->pause(); else machine->resume();
++    std::fflush(nullptr);
++}
++
++EMSCRIPTEN_KEEPALIVE void wang_flush()
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    if (!machine) return;
++    for (const char *tag : { "upd765:0:525dd", "upd765:1:525dd" }) {
++        auto *image = machine->root_device().subdevice<floppy_image_device>(tag);
++        if (!image || !image->exists()) continue;
++        const auto *format = image->get_load_format();
++        if (format && format->supports_save()) image->setup_write(format);
++    }
++    std::fflush(nullptr);
++}
++
++EMSCRIPTEN_KEEPALIVE void wang_reset()
++{
++    auto *machine = running_machine::emscripten_get_running_machine();
++    if (machine) machine->schedule_soft_reset();
++}
++}
++#endif
+diff --git a/src/mame/wang/wangpckb.cpp b/src/mame/wang/wangpckb.cpp
+index 0ccdc5d6..cc3aec31 100644
+--- a/src/mame/wang/wangpckb.cpp
++++ b/src/mame/wang/wangpckb.cpp
+@@ -511,3 +511,186 @@ void wangpc_keyboard_device::kb_p3_w(uint8_t data)
+ 	//if (LOG) logerror("P3 %02x\n", data);
+ 	m_txd_handler(BIT(data, 1));
+ }
++
++
++// High-level protocol reference: number42net/wang-keyboard-adapter (wire behavior only).
++// Serial framing follows the motherboard's IM6402 setup: 62500 baud, 8N2.
++DEFINE_DEVICE_TYPE(WANGPC_HLE_KEYBOARD, wangpc_hle_keyboard_device, "wangpckb_hle", "Wang PC Keyboard (high-level)")
++
++wangpc_hle_keyboard_device::wangpc_hle_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock)
++	: device_t(mconfig, WANGPC_HLE_KEYBOARD, tag, owner, clock)
++	, device_buffered_serial_interface(mconfig, *this)
++	, m_rows(*this, "Y%u", 0)
++	, m_txd_handler(*this)
++	, m_leds(*this, "led%u", 0U)
++{
++}
++
++ioport_constructor wangpc_hle_keyboard_device::device_input_ports() const
++{
++	return INPUT_PORTS_NAME(wangpc_keyboard);
++}
++
++void wangpc_hle_keyboard_device::device_start()
++{
++	m_scan_timer = timer_alloc(FUNC(wangpc_hle_keyboard_device::scan_keys), this);
++	m_repeat_timer = timer_alloc(FUNC(wangpc_hle_keyboard_device::repeat_key), this);
++	save_item(NAME(m_keys));
++	save_item(NAME(m_key_up));
++	save_item(NAME(m_pending));
++	save_item(NAME(m_parameter));
++	save_item(NAME(m_remaining));
++	save_item(NAME(m_last_key));
++	save_item(NAME(m_repeat));
++	save_item(NAME(m_led_state));
++	save_item(NAME(m_volume));
++	save_item(NAME(m_all_key_up));
++}
++
++void wangpc_hle_keyboard_device::reset_protocol()
++{
++	std::fill(std::begin(m_key_up), std::end(m_key_up), 0);
++	m_pending = m_parameter = m_remaining = m_last_key = m_repeat = 0;
++	m_led_state = m_volume = 0;
++	m_all_key_up = false;
++	m_repeat_timer->reset();
++	for (int i = 0; i < 6; ++i)
++		m_leds[i] = 0;
++}
++
++void wangpc_hle_keyboard_device::device_reset()
++{
++	set_data_frame(1, 8, PARITY_NONE, STOP_BITS_2);
++	set_rcv_rate(62500);
++	set_tra_rate(62500);
++	clear_fifo();
++	receive_register_reset();
++	transmit_register_reset();
++	m_txd_handler(1);
++	reset_protocol();
++	std::fill(std::begin(m_keys), std::end(m_keys), 0xff);
++	m_scan_timer->adjust(attotime::from_msec(1), 0, attotime::from_msec(1));
++}
++
++void wangpc_hle_keyboard_device::tra_callback()
++{
++	m_txd_handler(transmit_register_get_data_bit());
++}
++
++void wangpc_hle_keyboard_device::received_byte(u8 byte)
++{
++	if (m_remaining)
++	{
++		if (m_pending <= 5)
++			m_key_up[m_parameter] = byte;
++		else if (m_pending == 0x20 && !m_parameter)
++			m_volume = byte;
++		++m_parameter;
++		--m_remaining;
++		return;
++	}
++	logerror("HLE keyboard command %02X\n", byte);
++	if (byte >= 1 && byte <= 5)
++	{
++		std::fill(std::begin(m_key_up), std::end(m_key_up), 0);
++		m_all_key_up = false;
++		m_pending = byte;
++		m_remaining = byte;
++		m_parameter = 0;
++	}
++	else if (byte >= 0x10 && byte <= 0x1b)
++	{
++		u8 const mask = 1U << ((byte - 0x10) / 2);
++		m_led_state = BIT(byte, 0) ? (m_led_state & ~mask) : (m_led_state | mask);
++	}
++	else switch (byte)
++	{
++	case 0x00: break;
++	case 0x06: m_all_key_up = true; break;
++	case 0x07:
++		std::fill(std::begin(m_key_up), std::end(m_key_up), 0);
++		m_all_key_up = false;
++		break;
++	case 0x08: reset_protocol(); break;
++	case 0x09: transmit_byte(0x01); transmit_byte(0x33); break;
++	case 0x0a: case 0x0b: break; // ponytail: click/beep synthesis deferred; serial keyboard input works without sound.
++	case 0x0c: transmit_byte(m_last_key); break;
++	case 0x0f: transmit_byte(0x01); transmit_byte(m_volume); break;
++	case 0x1c: m_led_state = 0x3f; break;
++	case 0x1d: m_led_state = 0; break;
++	case 0x1e: transmit_byte(0x01); transmit_byte(m_led_state); break;
++	case 0x20: case 0x31: case 0x32:
++		m_pending = byte;
++		m_parameter = 0;
++		m_remaining = byte == 0x31 ? 1 : 2;
++		break; // sound-generator data is consumed without synthesizing sound
++	default: logerror("HLE keyboard unsupported command %02X\n", byte); break;
++	}
++	for (int i = 0; i < 6; ++i)
++		m_leds[i] = BIT(m_led_state, i);
++}
++
++void wangpc_hle_keyboard_device::send_key(u8 code)
++{
++	m_last_key = code;
++	transmit_byte(code);
++}
++
++TIMER_CALLBACK_MEMBER(wangpc_hle_keyboard_device::repeat_key)
++{
++	if (m_repeat)
++		send_key(m_repeat);
++}
++
++TIMER_CALLBACK_MEMBER(wangpc_hle_keyboard_device::scan_keys)
++{
++	static constexpr u8 codes[16][8] = {
++		{ 0x2b, 0x00, 0x53, 0x52, 0x00, 0x29, 0x26, 0x2e },
++		{ 0x64, 0x00, 0x00, 0x54, 0x45, 0x44, 0x35, 0x2d },
++		{ 0x65, 0x2f, 0x56, 0x55, 0x46, 0x00, 0x00, 0x37 },
++		{ 0x67, 0x66, 0x58, 0x57, 0x48, 0x47, 0x38, 0x2a },
++		{ 0x69, 0x68, 0x5a, 0x59, 0x4a, 0x49, 0x3a, 0x39 },
++		{ 0x6b, 0x6a, 0x5c, 0x5b, 0x4c, 0x4b, 0x3c, 0x3b },
++		{ 0x6d, 0x6c, 0x5e, 0x5d, 0x4e, 0x4d, 0x3e, 0x3d },
++		{ 0x1f, 0x6e, 0x6f, 0x5f, 0x1e, 0x4f, 0x1b, 0x3f },
++		{ 0x77, 0x76, 0x1c, 0x32, 0x00, 0x34, 0x00, 0x28 },
++		{ 0x79, 0x78, 0x11, 0x12, 0x00, 0x00, 0x00, 0x25 },
++		{ 0x7b, 0x7a, 0x71, 0x70, 0x2c, 0x00, 0x00, 0x00 },
++		{ 0x7d, 0x7c, 0x73, 0x72, 0x00, 0x00, 0x00, 0x00 },
++		{ 0x36, 0x7e, 0x75, 0x74, 0x24, 0x00, 0x00, 0x00 },
++		{ 0x14, 0x18, 0x19, 0x00, 0x1a, 0x00, 0x00, 0x00 },
++		{ 0x60, 0x13, 0x15, 0x16, 0x40, 0x17, 0x10, 0x00 },
++		{ 0x62, 0x61, 0x51, 0x50, 0x00, 0x41, 0x31, 0x30 },
++	};
++	for (int row = 0; row < 16; ++row)
++	{
++		u8 const keys = m_rows[row]->read();
++		u8 const changed = keys ^ m_keys[row];
++		m_keys[row] = keys;
++		for (int col = 0; col < 8; ++col)
++		{
++			u8 const code = codes[row][col];
++			if (!code || !BIT(changed, col))
++				continue;
++			if (!BIT(keys, col))
++			{
++				send_key(code);
++				if (code != 0x1b && code != 0x35 && code != 0x24 && code != 0x25 && code != 0x1e)
++				{
++					m_repeat = code;
++					m_repeat_timer->adjust(attotime::from_msec(500), 0, attotime::from_msec(33));
++				}
++			}
++			else
++			{
++				if (m_repeat == code)
++				{
++					m_repeat = 0;
++					m_repeat_timer->reset();
++				}
++				if (m_all_key_up || code == 0x1b || code == 0x35 || std::find(std::begin(m_key_up), std::end(m_key_up), code) != std::end(m_key_up))
++					send_key(code | 0x80);
++			}
++		}
++	}
++}
+diff --git a/src/mame/wang/wangpckb.h b/src/mame/wang/wangpckb.h
+index 0bee301a..9f337fa0 100644
+--- a/src/mame/wang/wangpckb.h
++++ b/src/mame/wang/wangpckb.h
+@@ -12,6 +12,7 @@
+ #pragma once
+ 
+ #include "cpu/mcs51/i8051.h"
++#include "diserial.h"
+ 
+ #include "sound/sn76496.h"
+ 
+@@ -64,4 +65,43 @@ private:
+ // device type definition
+ DECLARE_DEVICE_TYPE(WANGPC_KEYBOARD, wangpc_keyboard_device)
+ 
++// Optional high-level serial keyboard; preserves the original MCU-based device.
++class wangpc_hle_keyboard_device : public device_t, public device_buffered_serial_interface<64U>
++{
++public:
++	wangpc_hle_keyboard_device(const machine_config &mconfig, const char *tag, device_t *owner, u32 clock = 0);
++	auto txd_handler() { return m_txd_handler.bind(); }
++	void write_rxd(int state) { rx_w(state); }
++
++protected:
++	virtual void device_start() override ATTR_COLD;
++	virtual void device_reset() override ATTR_COLD;
++	virtual ioport_constructor device_input_ports() const override ATTR_COLD;
++	virtual void tra_callback() override;
++	virtual void received_byte(u8 byte) override;
++
++private:
++	TIMER_CALLBACK_MEMBER(scan_keys);
++	TIMER_CALLBACK_MEMBER(repeat_key);
++	void reset_protocol();
++	void send_key(u8 code);
++	required_ioport_array<16> m_rows;
++	devcb_write_line m_txd_handler;
++	output_finder<6> m_leds;
++	emu_timer *m_scan_timer = nullptr;
++	emu_timer *m_repeat_timer = nullptr;
++	u8 m_keys[16] = {};
++	u8 m_key_up[5] = {};
++	u8 m_pending = 0;
++	u8 m_parameter = 0;
++	u8 m_remaining = 0;
++	u8 m_last_key = 0;
++	u8 m_repeat = 0;
++	u8 m_led_state = 0;
++	u8 m_volume = 0;
++	bool m_all_key_up = false;
++};
++
++DECLARE_DEVICE_TYPE(WANGPC_HLE_KEYBOARD, wangpc_hle_keyboard_device)
++
+ #endif // MAME_WANG_WANGPCKB_H

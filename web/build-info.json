@@ -1,0 +1,10 @@
+{
+  "appVersion": "2.3.2",
+  "revision": 0,
+  "mameVersion": "0.289",
+  "baseCommit": "39eb9e44c394df9aec8186f2d2ef7517ace232e1",
+  "emscripten": "6.0.2",
+  "target": "wangweb",
+  "wasmSHA256": "02876a62a38b02e93dddeb342bc55a0b91e17a7f7244478a5de939c70a365b62",
+  "sourcePatch": "patches/wang-browser-complete.patch"
+}

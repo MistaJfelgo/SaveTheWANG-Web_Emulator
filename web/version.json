@@ -1,0 +1,10 @@
+{
+  "version": "2.3.2",
+  "revision": 0,
+  "type": "bugfix",
+  "notes": [
+    "Match main-site navigation, with About this Project linking to the emulator project page.",
+    "Return warning/error notices to standard formatting after a brief flash and seven-second highlight.",
+    "Preserve the current live Quick Help text."
+  ]
+}

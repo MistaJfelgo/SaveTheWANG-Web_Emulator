@@ -1,0 +1,44 @@
+[
+  {
+    "id": "pcxc5-3",
+    "name": "PCXC5-3",
+    "available": true,
+    "description": "PCXC5-3: floppy A and Winchester C, using your R3 mainboard ROMs (boot banner REV. 2.50), R12 controller and ST-225. Choose a ready-to-use Wang System 2.01 installation, initialized empty disk, or uninitialized disk. Monochrome MVC display, 256 KB RAM (128 KB onboard plus a PM030-B 128 KB expansion in slot 3) and high-level Wang keyboard; remaining expansion details still need confirmation.",
+    "driver": "wangpchle",
+    "bios": "r3",
+    "roms": [
+      "wangpc.zip",
+      "wangpc_wdc.zip"
+    ],
+    "harddisk": "ST225-ready.chd",
+    "floppyA": "",
+    "machineArgs": [
+      "-slot2",
+      "mvc",
+      "-slot1",
+      "wdc,bios=r12",
+      "-upd765:1",
+      "",
+      "-slot3",
+      "emb128"
+    ],
+    "floppyCount": 1,
+    "winchester": true
+  },
+  {
+    "id": "pc-s2-2",
+    "name": "PC-S2-2",
+    "available": false,
+    "description": "Dual floppies A and B. Drive layout confirmed by the owner. Original ROM dumps, RAM and remaining hardware details pending.",
+    "floppyCount": 2,
+    "winchester": false
+  },
+  {
+    "id": "pc-s1-2",
+    "name": "PC-S1-2",
+    "available": false,
+    "description": "Floppy A and Winchester C. Drive layout confirmed by the owner. Original ROM dumps, RAM and remaining hardware details pending.",
+    "floppyCount": 1,
+    "winchester": true
+  }
+]

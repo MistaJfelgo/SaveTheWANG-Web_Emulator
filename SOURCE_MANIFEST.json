@@ -1,0 +1,165 @@
+{
+  "release": "2.3.2",
+  "sourceDate": "2026-10-30",
+  "upstream": "https://github.com/mamedev/mame",
+  "baseCommit": "39eb9e44c394df9aec8186f2d2ef7517ace232e1",
+  "mameVersion": "0.289",
+  "emscripten": "6.0.2",
+  "emsdkCommit": "d7b4130688bfa348392b921ab04015aa15c4f154",
+  "runtimeSHA256": "02876a62a38b02e93dddeb342bc55a0b91e17a7f7244478a5de939c70a365b62",
+  "modifiedFiles": [
+    {
+      "file": "mame/scripts/genie.lua",
+      "compiledInputSHA256": "32ce405c8001c869e3ac610046a9f07688a36d5daacdc41b6f3c62a3d5ffcb29",
+      "publishedSHA256": "52b5f47e403f259d9c7846c992fcad532af8194d4c2ba2ace346b7f3c0a3fede",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/scripts/src/3rdparty.lua",
+      "compiledInputSHA256": "fcb8f64e287303d9daf251de6c707ca64799d1c4c5cdedcba854008ca4569e4a",
+      "publishedSHA256": "15aa3bd280a1f80f587266f914de169c40683dc5cab859e728057d3103e74608",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/scripts/src/devices.lua",
+      "compiledInputSHA256": "0cc0ab489afacdca10501df790cad83beaa7cae2f4ae11dd4d9692aaa23fd55c",
+      "publishedSHA256": "1471f1c1b84fd14be5ef723fa36adc8ecdc8c029feef04f6d759b493069d3b37",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/scripts/src/mame/frontend.lua",
+      "compiledInputSHA256": "de8f4f29c388d6db2d768f36c9ea03393dbad5a76de9c9b7ae70e800aa304838",
+      "publishedSHA256": "5e85603ce46e205c637b582a4ac1a43cdcb9f7509d35a292458c27a2871b3ffb",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/scripts/src/osd/modules.lua",
+      "compiledInputSHA256": "e452387c8011f452a86c57ff85a0f0e5a03c0ca099883a8275e9b7023cb08760",
+      "publishedSHA256": "39a37eb0914ed9ca5a676fa5b782455966935b6c45a2f94317878cdff09108ba",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/devices/bus/wangpc/emb.cpp",
+      "compiledInputSHA256": "dc109765276d5191d1dd3ad87ca4d8672c8c084489764ed7076da13c57654820",
+      "publishedSHA256": "961123c26b7d2c288bf33c5a4941e875e0aa6f62b9e284f038acac6843f45f42",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/devices/bus/wangpc/emb.h",
+      "compiledInputSHA256": "cdd9014034d7f41fa9c2adcd2aa2b719bf18b2304d6e19f7c62fb8c3e7372623",
+      "publishedSHA256": "5bee7fd9f6368d6a690b615166e18303b643b2a8105211093365f57bd850c965",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/devices/bus/wangpc/wangpc.cpp",
+      "compiledInputSHA256": "89b41561227ed86de011869aa67acb4c8bfbce4aef627b12729a9bfb862cfb42",
+      "publishedSHA256": "e8470af2ccc8cb8c9cf3db39b2df404f91c6f515bf60fd36a19ff72ddb3361bb",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/devices/bus/wangpc/wdc.cpp",
+      "compiledInputSHA256": "bceebacdf059e4dcc3dccae04f2b53feaecd178d833ec5b471c1f6ee86124524",
+      "publishedSHA256": "0181544a7dc9230bd4de4cd5888fef520155db1f77f7699618fcec7dc3004336",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/devices/imagedev/floppy.cpp",
+      "compiledInputSHA256": "24d81df7bb4e4c8ec742ffbf0493c2e6b71097d539ebe5642dd33f7f43cf5c51",
+      "publishedSHA256": "820773a3b341bba13f1a117ce9c0f64fff729b5454a4a2ed2eea551663e90cec",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/emu/machine.cpp",
+      "compiledInputSHA256": "4685559b2918df3a4dbdd2a2207c244d61a3c838b81352a3c4696c498820f081",
+      "publishedSHA256": "99508995f0002d1be8ce3e827ad1882a023f946e7e00d514cebbf627bad2804d",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/lib/formats/mfi_dsk.cpp",
+      "compiledInputSHA256": "d04f630b6a06272bdf3e6cd8eccd8e15cb9fa5ab2a48d3dd26cdc2cbba2cf7a5",
+      "publishedSHA256": "8f03346b773cb8c68f0c3f10624d2d1afc53cde7e65e6964fd95df636ec4129b",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/mame/mame.lst",
+      "compiledInputSHA256": "9de5aef9a2a5c0d786622d7458e57450f20587cfdbe1b0779339dd6c64392518",
+      "publishedSHA256": "7b23f3d3d47d5a8fee9c018af4799ddb5581d4dc8104416f40733ddba7ca7f23",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/mame/wang/wangpc.cpp",
+      "compiledInputSHA256": "1e08e05e88dce7ac7c9b0089550493727986b4fdb6fa95b99ed693535ae1246c",
+      "publishedSHA256": "26bd12140a0a419a8ae8497c8882fa345a06c48bfbdf64a00195fb69ef1678ad",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/mame/wang/wangpckb.cpp",
+      "compiledInputSHA256": "351d528b26776d32c44cd977ad11c26c69eb3f69f836bd95e51204faf68052a6",
+      "publishedSHA256": "c10dc59801cc6b665a9b920ec2c2c680337701c9adab4e2dc0458b99d4557e2e",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    },
+    {
+      "file": "mame/src/mame/wang/wangpckb.h",
+      "compiledInputSHA256": "0e0f4aee4c164dfd1d6967e37a28f9fe1bd1058563388cb72888c78bae654e07",
+      "publishedSHA256": "5a66ea70c4f97f7bd33c26908e9d95f4a7bd0a64f936124f441e24b9ecee2f35",
+      "publicationOnlyDifference": "One dated modification comment and canonical LF line endings; executable source otherwise unchanged"
+    }
+  ],
+  "portArchives": [
+    {
+      "file": "third_party/port-sources/freetype.zip",
+      "sha256": "a7165cb405dfce349ae64d6f59efb2567565ca8edbacbeff2a8d0e4cfa779cf5",
+      "bytes": 2936937
+    },
+    {
+      "file": "third_party/port-sources/harfbuzz.2.0.tar.xz",
+      "sha256": "0ada50a1c199bb6f70843ab893c55867743a443b84d087d54df08ad883ebc2cd",
+      "bytes": 14501956
+    },
+    {
+      "file": "third_party/port-sources/sdl3_ttf.2.2.zip",
+      "sha256": "0a3bc1426ee16fc0969e96f12baef9ff3d980be61b54caa54fab67983bce7186",
+      "bytes": 1764214
+    },
+    {
+      "file": "third_party/port-sources/sdl3.4.2.zip",
+      "sha256": "0af8409d8ccde8c46382b78c2a5a11658362f3b4def7532e9d0658af4d7c6a7e",
+      "bytes": 17200102
+    },
+    {
+      "file": "third_party/port-sources/zlib.3.2.tar.gz",
+      "sha256": "b99a0b86c0ba9360ec7e78c4f1e43b1cbdf1e6936c8fa0f6835c0cd694a495a1",
+      "bytes": 1566911
+    }
+  ],
+  "buildInfo": {
+    "appVersion": "2.3.2",
+    "revision": 0,
+    "mameVersion": "0.289",
+    "baseCommit": "39eb9e44c394df9aec8186f2d2ef7517ace232e1",
+    "emscripten": "6.0.2",
+    "target": "wangweb",
+    "wasmSHA256": "02876a62a38b02e93dddeb342bc55a0b91e17a7f7244478a5de939c70a365b62",
+    "sourcePatch": "WANG_WPC_R3_Codex_Handoff/patches/wangpc-r3-complete.patch"
+  },
+  "excluded": [
+    "Private ROM dumps",
+    "Guest disk images",
+    "Saved sessions",
+    "Compiled emulator binaries",
+    "SDK binaries",
+    "Credentials and local configuration"
+  ],
+  "materializedSymlinks": [
+    {
+      "file": "mame/3rdparty/zstd/tests/cli-tests/bin/unzstd",
+      "upstreamTarget": "zstd",
+      "publicationRepresentation": "Regular copy on Windows; not used by Wang build"
+    },
+    {
+      "file": "mame/3rdparty/zstd/tests/cli-tests/bin/zstdcat",
+      "upstreamTarget": "zstd",
+      "publicationRepresentation": "Regular copy on Windows; not used by Wang build"
+    }
+  ]
+}
