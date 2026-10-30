@@ -1,0 +1,36 @@
+// license:BSD-3-Clause
+// copyright-holders:Tomasz Slanina
+/********************************************
+    NEC V810 (upd70732) disassembler
+  Tomasz Slanina
+*******************************************/
+
+
+#ifndef MAME_CPU_V810_V810DASM_H
+#define MAME_CPU_V810_V810DASM_H
+
+#pragma once
+
+class v810_disassembler : public util::disasm_interface
+{
+public:
+	v810_disassembler() = default;
+	virtual ~v810_disassembler() = default;
+
+	virtual u32 opcode_alignment() const override;
+	virtual offs_t disassemble(std::ostream &stream, offs_t pc, const data_buffer &opcodes, const data_buffer &params) override;
+
+protected:
+	static const char *const dRegs[];
+};
+
+// Nintendo NVC (Virtual Boy): CLI, SEI, XB, XH, REV and MPYHW
+class nintendo_nvc_disassembler : public v810_disassembler
+{
+public:
+	nintendo_nvc_disassembler() = default;
+
+	virtual offs_t disassemble(std::ostream &stream, offs_t pc, const data_buffer &opcodes, const data_buffer &params) override;
+};
+
+#endif
